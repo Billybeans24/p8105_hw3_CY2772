@@ -32,7 +32,7 @@ scale_fill_discrete = scale_fill_viridis_d
 ```
 
 # Problem 1
-## Part1: Load and describe the Data:
+## Part a): Load and describe the Data:
 ```{r}
 data("ny_noaa")
 # View the dimensions of the dataset
@@ -72,5 +72,48 @@ ny_noaa %>%
   * Approximately 22.80% of snwd values are missing.
   * A significant portion of tmax (43.69%) and tmin (46.23%) values are missing.
 
+## Part b): Data cleaning
+### Create Year, Month, and Day Variables
+```{r}
+# Create separate variables for year, month, and day
+ny_noaa = ny_noaa %>%
+  mutate(
+    year = year(date),
+    month = month(date),
+    day = day(date)
+  )
+```
+### Convert Units to Reasonable Measures
+* Temperature: Convert from tenths of degrees Celsius to degrees Celsius.
+* Precipitation: Convert from tenths of mm to mm.
+```{r}
+# Convert `prcp`, `tmax`, and `tmin` to numeric before changing units
+ny_noaa <- ny_noaa %>%
+  mutate(
+    prcp = as.numeric(prcp),
+    tmax = as.numeric(tmax),
+    tmin = as.numeric(tmin)
+  )
+# Adjust units for temperature and precipitation
+ny_noaa = ny_noaa %>%
+  mutate(
+    prcp = prcp / 10,  # Precipitation in mm
+    tmax = tmax / 10,  # Max temp in °C
+    tmin = tmin / 10   # Min temp in °C
+  )
+```
 
+### Identify Most Common Snowfall Values
+```{r}
+# Count the occurrences of each snowfall value
+snow_counts = ny_noaa %>%
+  count(snow) %>%
+  arrange(desc(n))
+
+# View the most common snowfall values
+head(snow_counts)
+
+```
+* The most commonly observed value for snowfall is 0 mm, with 2,008,508 occurrences.
+* This is expected as snowfall doesn't occur every day, especially outside the winter months.
 
