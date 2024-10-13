@@ -12,6 +12,7 @@ library(ggplot2)
 library(patchwork) # For combining plots
 library(ggridges)
 library(hexbin)     # For hexbin plots
+library(lubridate)
 library(p8105.datasets)
 
 # Set global plot options
@@ -88,7 +89,7 @@ ny_noaa = ny_noaa %>%
 * Precipitation: Convert from tenths of mm to mm.
 ```{r}
 # Convert `prcp`, `tmax`, and `tmin` to numeric before changing units
-ny_noaa <- ny_noaa %>%
+ny_noaa = ny_noaa %>%
   mutate(
     prcp = as.numeric(prcp),
     tmax = as.numeric(tmax),
@@ -116,4 +117,76 @@ head(snow_counts)
 ```
 * The most commonly observed value for snowfall is 0 mm, with 2,008,508 occurrences.
 * This is expected as snowfall doesn't occur every day, especially outside the winter months.
+
+## Part c) Visualization:
+### Average Max Temperature in January and July Across Years
+```{r}
+##Prepare Data
+# Filter data for January and July
+jan_jul_temps = ny_noaa %>%
+  filter(month %in% c(1, 7)) %>%
+  group_by(id, year, month) %>%
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    .groups = 'drop'
+  ) %>%
+  mutate(month = if_else(month == 1, "January", "July"))
+##Create Plots
+# Plot for January
+p_jan = ggplot(jan_jul_temps %>% filter(month == "January"), 
+                aes(x = year, y = mean_tmax, group = id, color = id)) +
+  geom_point(alpha = 0.5) +
+  labs(
+    title = "Average Max Temperature in January",
+    x = "Year",
+    y = "Mean Max Temperature (°C)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Plot for July
+p_jul <- ggplot(jan_jul_temps %>% filter(month == "July"), 
+                aes(x = year, y = mean_tmax, group = id, color = id)) +
+  geom_point(alpha = 0.5) +
+  labs(
+    title = "Average Max Temperature in July",
+    x = "Year",
+    y = "Mean Max Temperature (°C)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Combine plots using patchwork
+(p_jan / p_jul) + plot_layout(heights = c(1, 1))
+
+```
+
+* Seasonal Patterns:
+
+  * The January plot shows mean maximum temperatures below freezing for many stations. This is expected, as January is a winter month in New York.
+  * The July plot shows mean maximum temperatures generally around 25°C to 30°C, which aligns with typical summer weather.
+  
+* Yearly Variation:
+  
+  * In both January and July, there is a regular seasonal cycle where temperatures seem consistent year-over-year, suggesting stability in average             seasonal temperatures over time.
+  * However, in some years, the spread of the data seems more significant, indicating variations between different weather stations or some abnormal     weather patterns.
+  
+* Outliers:
+
+  * January: There are a few points that appear significantly lower than others, especially in the 1980s, indicating some extremely cold values. These         could be legitimate observations or data errors.
+  * July: There are some outliers around 15°C, which seem lower than the rest of the data points in the same period. These could be caused by errors in       data collection or unusual weather events.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
