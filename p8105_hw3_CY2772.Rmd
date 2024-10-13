@@ -177,7 +177,89 @@ p_jul <- ggplot(jan_jul_temps %>% filter(month == "July"),
   * July: There are some outliers around 15°C, which seem lower than the rest of the data points in the same period. These could be caused by errors in       data collection or unusual weather events.
 
 
+## Part d) Visualization of tmax vs tmin Plot and Snowfall Distribution
+### i. tmax vs tmin Plot
+```{r}
+# Hexbin plot for tmax vs tmin
+p_temp = ggplot(ny_noaa, aes(x = tmin, y = tmax)) +
+  geom_hex(bins = 50) +
+  labs(
+    title = "Relationship Between Minimum and Maximum Temperatures",
+    x = "Minimum Temperature (°C)",
+    y = "Maximum Temperature (°C)"
+  ) +
+  theme_minimal()
 
+```
+### ii. Snowfall Distribution by Year
+
+```{r}
+# Filter snowfall data
+snowfall_filtered = ny_noaa %>%
+  filter(snow > 0, snow < 100)
+# Plot snowfall distribution by year using boxplots
+p_snow = ggplot(snowfall_filtered, aes(x = factor(year), y = snow)) +
+  geom_boxplot(outlier.size = 0.5, alpha = 0.7) +
+  labs(
+    title = "Distribution of Snowfall by Year",
+    x = "Year",
+    y = "Snowfall (mm)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    panel.grid.major.x = element_blank()
+  )
+# Combine the temperature and snowfall plots
+p_temp + p_snow + plot_layout(ncol = 1)
+```
+
+# Problem 2
+## Part a): Load, Tidy, and Organize the Data Sets
+```{r}
+##Load the Data
+# Read in the demographic data
+demographics = read.csv("./dataset_hw3/nhanes_covar.csv", skip = 4)
+
+# Read in the accelerometer data
+accelerometer = read.csv("./dataset_hw3/nhanes_accel.csv")
+
+## Inspect the Data
+# Inspect demographics data
+str(demographics)
+summary(demographics)
+
+# Inspect accelerometer data
+str(accelerometer)
+summary(accelerometer)
+
+##Exclude Participants Less Than 21 Years of Age and Those with Missing Demographic Data
+# Exclude participants under 21
+demographics = demographics %>%
+  filter(age >= 21)
+
+# Remove rows with missing demographic data
+demographics = demographics %>%
+  drop_na()
+
+##Merge the Data Sets
+# Merge datasets on SEQN
+data = merge(accelerometer, demographics, by = "SEQN") %>% 
+  pivot_longer(
+    min1:min1440,
+    names_to = "minute_interval",
+    values_to = "MIMS"
+  ) %>%
+  mutate(
+    sex = factor(sex, levels = c(1, 2), labels = c('male','female')),
+    education = factor(education, levels = c(1, 2, 3), labels = c('Less than high school','High school equivalent','More than high school')),
+    minute_interval = str_remove(minute_interval,'min')
+    )
+```
+I merge the data and remove observations with age less than 21 or missing data in demographic data. Variable sex and education are set to be factors, repectively with levels “male, female” and “Less than high school, High school equivalent, More than high school”. Also, I remove strings “min” from variable “minute_interval”.
+
+
+## Part b): Produce a Reader-Friendly Table
 
 
 
