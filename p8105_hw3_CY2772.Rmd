@@ -256,12 +256,59 @@ data = merge(accelerometer, demographics, by = "SEQN") %>%
     minute_interval = str_remove(minute_interval,'min')
     )
 ```
-I merge the data and remove observations with age less than 21 or missing data in demographic data. Variable sex and education are set to be factors, repectively with levels “male, female” and “Less than high school, High school equivalent, More than high school”. Also, I remove strings “min” from variable “minute_interval”.
-
+I merged the data and removed any observations where the age was less than 21 or where demographic data was missing. I converted the variables sex and education into factors, setting their levels to "male" and "female" for sex, and "Less than high school," "High school equivalent," and "More than high school" for education. Additionally, I removed the "min" strings from the minute_interval variable.
 
 ## Part b): Produce a Reader-Friendly Table
+```{r}
+# Prepare unique participant data
+participant_data = data %>% 
+  select(SEQN, sex, education) %>% 
+  distinct()
 
+# Create num_data
+num_data = participant_data %>% 
+  group_by(sex, education) %>% 
+  summarise(number = n(), .groups = 'keep')
 
+# Create readable data frame
+readable_data = num_data %>% 
+  pivot_wider(
+    names_from = 'education',
+    values_from = 'number'
+  )
+
+# Display the readable data
+print(readable_data)
+
+# Plot p1: Bar plot of counts
+p1 = num_data %>% 
+  ggplot(aes(x = education, y = number, fill = sex)) + 
+  geom_col(position = position_dodge2(preserve = 'single')) +
+  geom_text(aes(label = number), 
+            position = position_dodge2(width = 0.9, preserve = 'single'), 
+            vjust = -0.5, hjust = 0.5) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, vjust = 0.85, hjust = 0.75)) +
+  labs(title = "Number of Participants by Sex and Education",
+       x = "Education Level",
+       y = "Number of Participants")
+
+# Plot p2: Proportional bar plot
+p2 = participant_data %>% 
+  ggplot(aes(x = education, fill = sex)) +
+  geom_bar(position = 'fill') +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, vjust = 0.85, hjust = 0.75)) +
+  labs(title = "Proportion of Sex within Education Levels",
+       x = "Education Level",
+       y = "Proportion")
+
+# Combine the plots
+combined_plot = p1 + p2 + plot_layout(ncol = 2)
+combined_plot
+```
+I began by creating a table that displays the number of men and women across different educational categories. To make the table more reader-friendly, I used the pivot_wider function to restructure it. The resulting plot shows that individuals with more than a high school education constitute the highest percentage among both men and women. Additionally, there are fewer men than women with less than a high school education, while more men than women have a high school equivalent education.
 
 
 
